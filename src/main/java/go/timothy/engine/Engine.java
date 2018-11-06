@@ -2,14 +2,10 @@ package go.timothy.engine;
 
 import go.timothy.config.EngineConfig;
 import go.timothy.config.EngineConfigImpl;
-import go.timothy.config.RequestConfig;
-import go.timothy.constant.HttpMethodEnum;
 import go.timothy.http.HttpClient;
 import go.timothy.http.HttpClientImpl;
-import go.timothy.parser.Parser;
 import go.timothy.pipeline.Pipeline;
 import go.timothy.request.Request;
-import go.timothy.response.Response;
 import go.timothy.result.Result;
 import go.timothy.spider.BaseSpider;
 import go.timothy.storager.Storager;
@@ -42,7 +38,7 @@ public class Engine {
     /**
      * 所有爬虫
      */
-    private final List<BaseSpider> baseSpiders = new ArrayList<>();
+    private final List<BaseSpider> baseSpiders = new ArrayList<>(8);
     /**
      * 引擎配置
      */
@@ -60,12 +56,20 @@ public class Engine {
      */
     private HttpClient httpClient;
 
-    public Engine(EngineConfig config) {
+    private Engine(EngineConfig config) {
         init(config, null, null, null);
     }
 
-    public Engine(EngineConfig config, ThreadPoolExecutor executor, Storager storager, HttpClient httpClient) {
+    private Engine(EngineConfig config, ThreadPoolExecutor executor, Storager storager, HttpClient httpClient) {
         init(config, executor, storager, httpClient);
+    }
+
+    public static Engine of(EngineConfig config) {
+        return new Engine(config);
+    }
+
+    public static Engine of(EngineConfig config, ThreadPoolExecutor executor, Storager storager, HttpClient httpClient) {
+        return new Engine(config, executor, storager, httpClient);
     }
 
     /**
@@ -99,12 +103,12 @@ public class Engine {
         log.info("引擎启动");
 
         // 1.准备各组件
-        log.info("准备组件中。。。");
+        log.info("准备组件中");
         readyModules();
-        log.info("组件准备完成。。。");
+        log.info("组件准备完成");
 
         // 2.循环所有的爬虫，把所有的请求装载进存储器
-        log.info("爬虫准备中。。。");
+        log.info("爬虫准备中");
         loadAllRequests();
 
         // 3.定义一个执行任务去装载请求任务
@@ -116,25 +120,11 @@ public class Engine {
                 }
 
                 Request request = this.storager.nextRequest();
-                executor.execute(() -> {
-                    BaseSpider spider = request.getSpider();
-                    log.info("开始请求【{}】【{}】", spider.getName(), request.getUrl());
-                    HttpMethodEnum method = request.getMethod();
-                    Response response = null;
-                    if (HttpMethodEnum.GET.equals(method)) {
-                        response = this.httpClient.get(request);
-                    } else if (HttpMethodEnum.POST.equals(method)) {
-                        response = this.httpClient.post(request);
-                    } else {
-                        log.info("【{}】暂不支持此【{}】请求方式", request.getUrl(), method);
-                    }
-                    if (response != null) {
-                        log.info("【{}】请求结束", request.getUrl());
-                        Parser<Response, Result> parser = request.getParser();
-                        Result result = parser.parse(response);
-                        this.storager.putResult(result);
-                    }
-                });
+                executor.execute(ProductionTask.of(request, this.httpClient, this.storager));
+
+                if (request.getRequestConfig() != null) {
+                    ThreadUtil.sleepMillisecond(request.getRequestConfig().getRequestIntervalMillisecond());
+                }
             }
         });
 
@@ -149,16 +139,28 @@ public class Engine {
             executor.execute(() -> {
                 List<Request> requests = result.getRequests();
                 if (requests != null && !requests.isEmpty()) {
-                    requests.forEach(this.storager::putRequest);
+                    requests.forEach(request -> {
+                        if (request != null) {
+                            this.storager.putRequest(request);
+                        }
+                    });
                 }
-                if (result.getItem() != null) {
-                    Pipeline pipeline = result.getRequest().getSpider().getPipeline();
-                    pipeline.process(result.getItem(), result.getRequest());
+                if (result.getTargetSource() != null) {
+                    Pipeline pipeline = result.getPreRequest().getSpider().getPipeline();
+                    pipeline.process(result.getTargetSource(), result.getPreRequest());
                 }
             });
         }
     }
 
+    /**
+     * 停止引擎
+     *
+     * @param
+     * @return void
+     * @author TimothyZz
+     * @date 2018/11/6 16:46
+     */
     public void stop() {
         this.isRunning = false;
 
@@ -175,8 +177,15 @@ public class Engine {
     private void loadAllRequests() {
         if (this.baseSpiders.size() > 0) {
             this.baseSpiders.forEach(e -> {
-                log.info("爬虫【{}】启动", e.getName());
-                e.getRequests().forEach(i -> storager.putRequest(i));
+                List<Request> requests = e.getRequests();
+                if (requests != null && !requests.isEmpty()) {
+                    requests.forEach(i -> {
+                        if (i != null) {
+                            this.storager.putRequest(i);
+                        }
+                    });
+                    log.info("爬虫【{}】启动", e.getName());
+                }
             });
         }
     }
@@ -209,7 +218,7 @@ public class Engine {
         }
 
         if (Objects.isNull(httpClient)) {
-            this.httpClient = new HttpClientImpl(new RequestConfig(5000, 5000));
+            this.httpClient = new HttpClientImpl();
         } else {
             this.httpClient = httpClient;
         }

@@ -6,7 +6,7 @@ package go.timothy.constant;
  * @author TimothyZz
  * @date 2018/10/26 11:05
  */
-public interface HttpStatusCode {
+public interface HttpStatusCodeConst {
     /**
      * 成功
      */

@@ -9,7 +9,7 @@ import lombok.Data;
  * @description 响应
  * @date 2018-09-30 10:12
  **/
-@Data
+@Data(staticConstructor = "of")
 public class Response {
     /**
      * 请求
@@ -19,5 +19,5 @@ public class Response {
      * 响应体
      */
     private final Entity entity;
-    
+
 }

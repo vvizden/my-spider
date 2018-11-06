@@ -5,7 +5,6 @@ import go.timothy.config.RequestConfig;
 import go.timothy.request.Request;
 import go.timothy.response.Entity;
 import go.timothy.response.Response;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
@@ -53,14 +52,20 @@ public class HttpClientImpl implements HttpClient {
      * @date 2018/10/12 16:00
      */
     @Override
-    public Response get(@NonNull Request request) {
+    public Response get(Request request) {
         HttpGet httpGet = new HttpGet(request.getUrl());
         List<Header> headers = request.getHeaders();
         if (headers != null && !headers.isEmpty()) {
-            headers.forEach(e -> httpGet.setHeader(e.getName(), e.getValue()));
+            headers.forEach(e -> {
+                if (e != null) {
+                    httpGet.setHeader(e.getName(), e.getValue());
+                }
+            });
         }
 
-        httpGet.setConfig(convertRequestConfig(request.getRequestConfig()));
+        if (request.getRequestConfig() != null) {
+            httpGet.setConfig(convertRequestConfig(request.getRequestConfig()));
+        }
 
         Future<HttpResponse> responseFuture = httpClient.execute(httpGet, null);
         HttpResponse httpResponse;
@@ -90,7 +95,9 @@ public class HttpClientImpl implements HttpClient {
             headers.forEach(e -> httpPost.setHeader(e.getName(), e.getValue()));
         }
 
-        httpPost.setConfig(convertRequestConfig(request.getRequestConfig()));
+        if (request.getRequestConfig() != null) {
+            httpPost.setConfig(convertRequestConfig(request.getRequestConfig()));
+        }
 
         Future<HttpResponse> responseFuture = httpClient.execute(httpPost, null);
         HttpResponse httpResponse;
@@ -188,7 +195,7 @@ public class HttpClientImpl implements HttpClient {
 
         Header contentTypeHeader = Header.of(contentType.getName(), contentType.getValue());
 
-        return new Response(request, new Entity(inputStream, contentTypeHeader, charset));
+        return Response.of(request, new Entity(inputStream, contentTypeHeader, charset));
     }
 
 }

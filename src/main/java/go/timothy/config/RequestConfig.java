@@ -2,6 +2,7 @@ package go.timothy.config;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author TimothyZz
@@ -11,6 +12,7 @@ import lombok.Data;
  **/
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class RequestConfig {
     /**
      * 连接建立超时
@@ -20,4 +22,8 @@ public class RequestConfig {
      * 数据包间隔超时
      */
     private int socketTimeout;
+    /**
+     * 请求间隔
+     */
+    private int requestIntervalMillisecond;
 }
