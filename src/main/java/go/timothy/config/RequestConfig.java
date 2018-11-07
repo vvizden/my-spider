@@ -1,8 +1,7 @@
 package go.timothy.config;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * @author TimothyZz
@@ -11,8 +10,7 @@ import lombok.NoArgsConstructor;
  * @date 2018-10-19 15:09
  **/
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
+@Builder
 public class RequestConfig {
     /**
      * 连接建立超时

@@ -44,7 +44,9 @@ public class ProductionTask implements Runnable {
         if (response != null) {
             Parser<Response, Result> parser = request.getParser();
             Result result = parser.parse(response);
-            this.storager.putResult(result);
+            if (result != null) {
+                this.storager.putResult(result);
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ package go.timothy.spider;
 
 import go.timothy.config.RequestConfig;
 import go.timothy.constant.HttpMethodEnum;
+import go.timothy.constant.UserAgentConst;
 import go.timothy.http.Header;
 import go.timothy.parser.Parser;
 import go.timothy.pipeline.Pipeline;
@@ -22,37 +23,48 @@ import java.util.List;
  **/
 @Data
 @Accessors(chain = true)
-public abstract class BaseSpider {
+public class BaseSpider {
     /**
      * 名称
      */
-    protected final String name;
+    private final String name;
     /**
      * 初始请求
      */
-    protected List<Request> requests = new ArrayList<>(8);
+    private final List<Request> requests = new ArrayList<>(8);
     /**
      * 数据加工管道
      */
-    protected Pipeline pipeline;
+    private Pipeline pipeline;
 
     /**
      * 默认请求头
      */
-    protected List<Header> headers;
+    private final List<Header> headers;
 
     /**
      * 默认请求配置
      */
-    protected RequestConfig requestConfig;
+    private RequestConfig requestConfig;
 
     /**
      * 配置请求方法
      */
-    protected HttpMethodEnum method;
+    private HttpMethodEnum method;
 
-    public BaseSpider(String name) {
+    {
+        this.method = HttpMethodEnum.GET;
+        ArrayList<Header> headers = new ArrayList<>(1);
+        headers.add(Header.of("User-Agent", UserAgentConst.CHROME_WIN10));
+        this.headers = headers;
+    }
+
+    private BaseSpider(String name) {
         this.name = name;
+    }
+
+    public static BaseSpider of(String name) {
+        return new BaseSpider(name);
     }
 
     /**
@@ -66,22 +78,17 @@ public abstract class BaseSpider {
     public BaseSpider addRequests(Parser parser, String... urls) {
         if (urls.length > 0) {
             for (String url : urls) {
-                Request request = Request.of(this, url, method, parser);
-                request.setHeaders(headers);
-                request.setRequestConfig(requestConfig);
-                requests.add(request);
+                this.requests.add(makeRequest(url, parser));
             }
         }
         return this;
     }
 
-    public Request makeRequest(String url, Parser<Response, Result> parser) {
-        Request request = Request.of(this, url, method, parser);
-        request.setHeaders(headers);
-        request.setRequestConfig(requestConfig);
+    public Request makeRequest(String url, Parser parser) {
+        Request request = Request.of(this, url, this.method, parser);
+        request.setHeaders(this.headers);
+        request.setRequestConfig(this.requestConfig);
         return request;
     }
-
-    public abstract Result parse(Response response);
 
 }

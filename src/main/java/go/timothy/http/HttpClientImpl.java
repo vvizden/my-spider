@@ -1,7 +1,7 @@
 package go.timothy.http;
 
-import go.timothy.TextDetector.TextDetector;
 import go.timothy.config.RequestConfig;
+import go.timothy.detector.TextDetector;
 import go.timothy.request.Request;
 import go.timothy.response.Entity;
 import go.timothy.response.Response;
@@ -33,14 +33,22 @@ import java.util.concurrent.Future;
 public class HttpClientImpl implements HttpClient {
     private final CloseableHttpAsyncClient httpClient;
 
-    public HttpClientImpl() {
+    private HttpClientImpl() {
         this.httpClient = HttpAsyncClients.createDefault();
     }
 
-    public HttpClientImpl(RequestConfig defaultHttpRequestConfig) {
+    private HttpClientImpl(RequestConfig defaultHttpRequestConfig) {
         this.httpClient = HttpAsyncClients.custom()
                 .setDefaultRequestConfig(convertRequestConfig(defaultHttpRequestConfig))
                 .build();
+    }
+
+    public static HttpClientImpl of() {
+        return new HttpClientImpl();
+    }
+
+    public static HttpClientImpl of(RequestConfig defaultHttpRequestConfig) {
+        return new HttpClientImpl(defaultHttpRequestConfig);
     }
 
     /**
@@ -195,7 +203,7 @@ public class HttpClientImpl implements HttpClient {
 
         Header contentTypeHeader = Header.of(contentType.getName(), contentType.getValue());
 
-        return Response.of(request, new Entity(inputStream, contentTypeHeader, charset));
+        return Response.of(request, Entity.of(inputStream, contentTypeHeader, charset));
     }
 
 }

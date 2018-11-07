@@ -1,4 +1,4 @@
-package go.timothy.TextDetector;
+package go.timothy.detector;
 
 import info.monitorenter.cpdetector.io.*;
 

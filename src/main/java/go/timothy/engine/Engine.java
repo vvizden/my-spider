@@ -56,16 +56,16 @@ public class Engine {
      */
     private HttpClient httpClient;
 
-    private Engine(EngineConfig config) {
-        init(config, null, null, null);
-    }
-
     private Engine(EngineConfig config, ThreadPoolExecutor executor, Storager storager, HttpClient httpClient) {
         init(config, executor, storager, httpClient);
     }
 
+    public static Engine of() {
+        return new Engine(null, null, null, null);
+    }
+
     public static Engine of(EngineConfig config) {
-        return new Engine(config);
+        return new Engine(config, null, null, null);
     }
 
     public static Engine of(EngineConfig config, ThreadPoolExecutor executor, Storager storager, HttpClient httpClient) {
@@ -146,8 +146,10 @@ public class Engine {
                     });
                 }
                 if (result.getTargetSource() != null) {
-                    Pipeline pipeline = result.getPreRequest().getSpider().getPipeline();
-                    pipeline.process(result.getTargetSource(), result.getPreRequest());
+                    Pipeline pipeline = result.getPipeline();
+                    if (pipeline != null) {
+                        pipeline.process(result.getTargetSource(), result.getPreRequest());
+                    }
                 }
             });
         }
@@ -218,7 +220,7 @@ public class Engine {
         }
 
         if (Objects.isNull(httpClient)) {
-            this.httpClient = new HttpClientImpl();
+            this.httpClient = HttpClientImpl.of();
         } else {
             this.httpClient = httpClient;
         }

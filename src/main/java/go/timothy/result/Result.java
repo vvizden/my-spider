@@ -1,5 +1,6 @@
 package go.timothy.result;
 
+import go.timothy.pipeline.Pipeline;
 import go.timothy.request.Request;
 import lombok.Data;
 
@@ -26,6 +27,10 @@ public class Result<T> {
      * 解析出来的资源
      */
     private T targetSource;
+    /**
+     * 资源对应的处理器
+     */
+    private Pipeline<T, ?> pipeline;
 
     /**
      * 添加请求

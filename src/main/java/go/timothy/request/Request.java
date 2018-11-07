@@ -10,6 +10,7 @@ import go.timothy.result.Result;
 import go.timothy.spider.BaseSpider;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -50,4 +51,32 @@ public class Request {
      */
     private final Parser<Response, Result> parser;
 
+    /**
+     * 创建请求
+     *
+     * @param url
+     * @return go.timothy.request.Request
+     * @author TimothyZz
+     * @date 2018/11/7 10:29
+     */
+    public static Request of(String url) {
+        return of(null, url, null, null);
+    }
+
+    /**
+     * 添加请求头
+     *
+     * @param name
+     * @param value
+     * @return go.timothy.request.Request
+     * @author TimothyZz
+     * @date 2018/11/7 11:08
+     */
+    public Request addHeader(String name, String value) {
+        if (this.headers == null) {
+            this.headers = new ArrayList<>(2);
+        }
+        this.headers.add(Header.of(name, value));
+        return this;
+    }
 }
