@@ -179,11 +179,11 @@ public class Engine {
     private void loadAllRequests() {
         if (this.baseSpiders.size() > 0) {
             this.baseSpiders.forEach(e -> {
-                List<Request> requests = e.getRequests();
-                if (requests != null && !requests.isEmpty()) {
-                    requests.forEach(i -> {
+                List<String> urls = e.getUrls();
+                if (urls != null && !urls.isEmpty()) {
+                    urls.forEach(i -> {
                         if (i != null) {
-                            this.storager.putRequest(i);
+                            this.storager.putRequest(e.makeRequest(i, e.getMainParser()));
                         }
                     });
                     log.info("爬虫【{}】启动", e.getName());

@@ -3,7 +3,6 @@ package go.timothy.response;
 import go.timothy.http.Header;
 import lombok.Data;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 
@@ -63,12 +62,13 @@ public class Entity {
 
     @Override
     public String toString() {
-        if (StringUtils.isNotBlank(document)) {
+        if (document != null) {
             return document;
         }
         try (BufferedReader bfr = new BufferedReader(new InputStreamReader(inputStream, charset))) {
             StringBuilder sb = bfr.lines().collect(StringBuilder::new, StringBuilder::append, StringBuilder::append);
-            return sb.toString();
+            this.document = sb.toString();
+            return this.document;
         } catch (IOException e) {
             e.printStackTrace();
             return null;

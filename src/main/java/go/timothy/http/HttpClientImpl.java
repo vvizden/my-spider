@@ -195,15 +195,16 @@ public class HttpClientImpl implements HttpClient {
 
         String charset;
         try {
-            charset = contentType.getValue().split(";")[1].trim();
+            charset = contentType.getValue().split(";")[1].split("=")[1].trim();
         } catch (RuntimeException e) {
             int length = inputStream.available() < 512 ? inputStream.available() : 512;
             charset = TextDetector.detectCodepage(inputStream, length);
         }
 
         Header contentTypeHeader = Header.of(contentType.getName(), contentType.getValue());
+        Entity of = Entity.of(inputStream, contentTypeHeader, charset);
 
-        return Response.of(request, Entity.of(inputStream, contentTypeHeader, charset));
+        return Response.of(request, of);
     }
 
 }

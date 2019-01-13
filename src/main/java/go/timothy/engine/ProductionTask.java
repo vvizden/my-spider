@@ -43,9 +43,11 @@ public class ProductionTask implements Runnable {
         log.info("【{}】请求结束", request.getUrl());
         if (response != null) {
             Parser<Response, Result> parser = request.getParser();
-            Result result = parser.parse(response);
-            if (result != null) {
-                this.storager.putResult(result);
+            if (parser != null) {
+                Result result = parser.parse(response);
+                if (result != null) {
+                    this.storager.putResult(result);
+                }
             }
         }
     }

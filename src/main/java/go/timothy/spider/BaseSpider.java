@@ -7,13 +7,13 @@ import go.timothy.http.Header;
 import go.timothy.parser.Parser;
 import go.timothy.pipeline.Pipeline;
 import go.timothy.request.Request;
-import go.timothy.response.Response;
-import go.timothy.result.Result;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author TimothyZz
@@ -28,10 +28,12 @@ public class BaseSpider {
      * 名称
      */
     private final String name;
+
     /**
-     * 初始请求
+     * 初始请求资源地址
      */
-    private final List<Request> requests = new ArrayList<>(8);
+    private final List<String> urls = new ArrayList<>(8);
+
     /**
      * 数据加工管道
      */
@@ -52,6 +54,11 @@ public class BaseSpider {
      */
     private HttpMethodEnum method;
 
+    /**
+     * 初始请求资源默认解析器
+     */
+    private Parser mainParser;
+
     {
         this.method = HttpMethodEnum.GET;
         ArrayList<Header> headers = new ArrayList<>(1);
@@ -67,26 +74,15 @@ public class BaseSpider {
         return new BaseSpider(name);
     }
 
-    /**
-     * 设置请求路径
-     *
-     * @param urls
-     * @return go.timothy.spider.BaseSpider
-     * @author TimothyZz
-     * @date 2018/11/2 16:31
-     */
-    public BaseSpider addRequests(Parser parser, String... urls) {
-        if (urls.length > 0) {
-            for (String url : urls) {
-                this.requests.add(makeRequest(url, parser));
-            }
-        }
+    public BaseSpider addUrls(String... urls) {
+        Objects.requireNonNull(urls);
+        this.urls.addAll(Arrays.asList(urls));
         return this;
     }
 
     public Request makeRequest(String url, Parser parser) {
         Request request = Request.of(this, url, this.method, parser);
-        request.setHeaders(this.headers);
+        request.setHeaders(new ArrayList<>(this.headers));
         request.setRequestConfig(this.requestConfig);
         return request;
     }

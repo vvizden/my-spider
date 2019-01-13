@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * @date 2018-11-07 09:59
  **/
 @Slf4j
-public class MeizituSpider {
+public class MzituSpider {
     private static HttpClientImpl httpClient = HttpClientImpl.of();
     private static BaseSpider meizituSpider = BaseSpider.of("妹子图");
     private final static String DIR = "C:\\Users\\mbwl\\Desktop\\meizitu";
@@ -78,7 +78,7 @@ public class MeizituSpider {
                 Entity entity = response.getEntity();
                 BaseSpider spider = request.getSpider();
                 Parser<Response, Result> parser = request.getParser();
-                Optional<Element> first = entity.css("body > div.main > div.article > div.content > a")
+                Optional<Element> first = entity.css("body > div.main div.main-image > p > a")
                         .stream().findFirst();
                 if (first.isPresent()) {
                     Element element = first.get();
@@ -105,7 +105,8 @@ public class MeizituSpider {
                 Request request = response.getRequest();
                 BaseSpider meizituSpider = request.getSpider();
                 Parser<Response, Result> parser = request.getParser();
-                Elements elements = response.getEntity().css("body > div.main > div.pic > ul > li > a");
+                Entity entity = response.getEntity();
+                Elements elements = entity.css("ul#pins > li > a");
                 List<Request> requests = elements.stream()
                         .map(e -> e.attr("href"))
                         .map(url -> {
@@ -113,12 +114,12 @@ public class MeizituSpider {
                             return r.addHeader("Referer", request.getUrl());
                         }).collect(Collectors.toList());
 
-                Elements nextPageElement = response.getEntity().css("body > div.main > div.pic > div.page > div.page a.ch");
+                Elements nextPageElement = response.getEntity().css("body > div.main div.postlist div.nav-links > a.next");
                 Optional<Element> first = nextPageElement.stream().findFirst();
                 if (first.isPresent()) {
                     Element element = first.get();
                     String href = element.attr("href");
-                    String nextPage = "http://www.mmjpg.com" + href;
+                    String nextPage = "https://www.mzitu.com" + href;
                     Request r = meizituSpider.makeRequest(nextPage, parser);
                     request.addHeader("Referer", request.getUrl());
                     requests.add(r);
@@ -132,7 +133,7 @@ public class MeizituSpider {
 
         meizituSpider.setMainParser(mainParser);
 
-        meizituSpider.addUrls("http://www.mmjpg.com/");
+        meizituSpider.addUrls("https://www.mzitu.com/");
 
     }
 
